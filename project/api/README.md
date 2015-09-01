@@ -1,5 +1,6 @@
 facebook-sdk-python3
 ===================
+Hélain: This package is the work from tuanchauict: https://github.com/tuanchauict/faceboo-sdk-python3.
 
 I did not write a new facebook sdk, I just fixed something for [facebook-sdk](https://github.com/pythonforfacebook/facebook-sdk) which helps you run `facebook-sdk` in `Python3`
 
