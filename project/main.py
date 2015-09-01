@@ -1,10 +1,7 @@
 # @author Hélain Schoonjans
 
-import facebook3 as fb
+import api.facebook as fb
 import sys 
-# the content of this repository: https://github.com/tuanchauict/facebook-sdk-python3
-# that have been added to the site-packages folder of anaconda
-
 
 # add error message in case of missing file or bad token!
 oauth_access_token = open('../ressources/accessToken.txt').read()
@@ -18,6 +15,11 @@ friends = {}
 try:
     some_friends = graph.get_connections("me", "friends")
     print(some_friends)
+    next_page=graph.fetch_url(some_friends['paging']['next'])
+    print(next_page)
+    # sadly facebook doesn't allow anymore to get the app user's friends' 
+    # information. This makes all of this pretty useless.
+    # Solution: build a real crawler !
 except:
     print("Unexpected error:",  sys.exc_info()[0])
 
