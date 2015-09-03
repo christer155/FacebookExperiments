@@ -28,6 +28,27 @@ graph.read_json_file(repertory + "my_network.json")
 graph.read_friendlists_file(repertory + "friendlists.json")
 graph.read_likes_file(repertory + "likes.json")
 
+
+
+"""
+I now must create a model file where the attribute to predict is the gender.
+"""
+graph.make_gender_model("../ressources/outputs/gender_model")
+
+
+
+"""
+Now it's time to predict the gender from the model
+"""
+
+from model import Model
+
+model = Model("../ressources/outputs/gender_model.arff")
+model.GetValues()
+model.TrainClassifier()
+model.name_community(score='posterior')
+
+
 """import networkx as nx
 from networkx.readwrite import json_graph
 

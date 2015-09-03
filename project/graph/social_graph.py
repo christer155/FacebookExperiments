@@ -157,14 +157,143 @@ class SocialGraph:
         # create the list of attributes
         partition = self.find_partition()[1]
         attributes = []
-        attributes.append(('gender', ['male', 'female', 'unknown']))
         attributes.append(('community', [str(res) for res in list(set([partition[v] for v in partition]))]))
         
         # create the content of each nodes line
         data = ""
         for node in self.G.nodes():
             data+=self.get_node_attributes(node)+','+str(partition[node])+'\n'
+        attributes.append(('gender', ['male', 'female', 'unknown']))
         return attributes, data
+    
+    def get__likes(self, node):
+        return self.G.node[node]['likes']
+    
+    def get_list_of_likes(self):
+        likes={}
+        for node in self.G.nodes():
+            for like in self.G.node[node]['likes']:
+                likes[like]=self.G.node[node]['likes'][like]
+        return sorted(set([i['name'] for i in likes.values()]))
+    
+    def get_gender_attributes(self):
+        likes=self.get_list_of_likes()
+        attributes = []
+        attributes.extend(self.getProfileTuples("../ressources/profiles.json"))
+        
+        for like in likes:
+                attributes.append(('_'.join(like.split()), ['liked', 'not_liked']))
+        attributes.append(('gender', ['male', 'female', 'unknown']))         
+        
+        return attributes
+        
+    def get_gender_data(self):
+        likes=self.get_list_of_likes()
+        information = ['relationship_status', 'locale']
+        information2 = ['hometown', 'location']
+        # create the content of each nodes line
+        data = ""
+        node_number = 0
+        profiles=self.get_profiles()
+        import time
+        start_time = time.time()
+        for node in self.G.nodes():
+            data2=''
+            
+            #add other profile informations
+            
+            if node in profiles:
+                
+                for info in information:
+                    data2+=('_'.join(profiles[node].get(info, "NA").split()))+","
+                
+                for info in information2:
+                    data2+=('_'.join(profiles[node].get(info, {'name':"NA"})['name'].replace(',', '').split()))+","
+                 
+                info = 'birthday'
+                test = profiles[node].get(info, "0/0/NA").split('/')
+                if len(test)==3:
+                    data2+=test[2]+","
+                else:
+                    data2+='NA'+"," 
+                    
+                # college and ULB
+                res = profiles[node].get('education', [])
+                if not(res):
+                    data2+='no'  
+                    data2+='no'+"," 
+                else:
+                    found = False
+                    for edu in res:
+                        if 'school' in edu:
+                            #'Coll\xe8ge Saint - Michel'
+                            if edu["school"]["name"]=='Collège Saint - Michel':
+                                data2+="yes"+","
+                                found=True
+                                break
+                            if edu["school"]["name"]=='Collège St-Michel':
+                                data2+="yes"+","
+                                found=True
+                                break
+                    if not(found):
+                        data2+="no"+","
+                    found = False
+                    for edu in res:
+                        if 'school' in edu:
+                            #'Coll\xe8ge Saint - Michel'
+                            if edu["school"]["name"]=='Université libre de Bruxelles':
+                                data2+="yes"+","
+                                found=True
+                                break
+                            """if edu["school"]["name"]=='ULB BE':
+                                data2+=","+"yes"
+                                found=True
+                                break"""
+                            if edu["school"]["name"]=='Vrije Universiteit Brussel':
+                                data2+="yes"+","
+                                found=True
+                                break
+                            if 'ULB' in edu["school"]["name"]:
+                                data2+="yes"+","
+                                found=True
+                                break   
+                    if not(found):
+                        data2+="no"+","
+            else:
+                for info in information:
+                    data2+="NA"+","
+                
+                for info in information2:
+                    data2+="NA"+","
+                    
+                #birthday
+                data2+="NA"+","
+                
+                # college and 
+                data2+="no"+","
+                data2+="no"+","
+            
+            for like in likes:
+                # if the user has not liked the page
+                if not(like in [i['name'] for i in self.G.node[node]['likes'].values()]):
+                    data2+='not_'
+                data2+='liked'
+                data2+=","
+                
+                
+            data2+=self.G.node[node].get('gender', 'unknown')
+            data2+='\n'
+            
+            data+=data2
+            print("Node ", node_number + 1, " processed in " ,time.time() - start_time, "seconds.")
+            node_number+=1
+        return data
+        
+    def get_profiles(self, filename="../ressources/profiles.json"):
+        json_data=open(filename)
+        profiles = json.load(json_data)
+        json_data.close()
+        return profiles
         
     # create the attribute vector of dictionary
     def get_attributes_with_likes(self, userList):
@@ -179,20 +308,15 @@ class SocialGraph:
         
         # create the list of attributes
         attributes = []
-        attributes.append(('gender', ['male', 'female', 'unknown']))
+        
         
         # add other profile informations
-        attributes.extend(self.getProfileTuples())
+        attributes.extend(self.getProfileTuples("../ressources/profiles.json"))
         
-        partition = self.find_partition()[1]
         for like in list_likes:
-                attributes.append(('_'.join(like.encode('utf-8').split()), ['liked', not_keyword+'liked']))
-        if userList=="":
-            attributes.append(('community', [str(res) for res in list(set([partition[v] for v in partition]))]))
-        else:
-            attributes.append((userList[0]["name"].encode('ascii', 'ignore').replace(" ", "_").replace(",", ""), ["other", userList[0]["name"].encode('ascii', 'ignore').replace(" ", "_").replace(",", "")]))
-            
-        json_data=open("C:\\Users\\Heschoon\\Dropbox\\ULB\\Current trends of artificial intelligence\\Trends_project\\profiles.json")
+                attributes.append(('_'.join(like.split()), ['liked', not_keyword+'liked']))
+        attributes.append(('gender', ['male', 'female', 'unknown'])) 
+        json_data=open("../ressources/profiles.json")
         profiles = json.load(json_data)
         json_data.close()
             
@@ -204,24 +328,24 @@ class SocialGraph:
         import time
         start_time = time.time()
         for node in self.G.nodes():
-            data2=self.get_node_attributes(node)
+            data2=''
             
             #add other profile informations
             
             if node in profiles:
                 
                 for info in information:
-                    data2+=","+('_'.join(profiles[node].get(info, "not_found").split()))
+                    data2+=","+('_'.join(profiles[node].get(info, "NA").split()))
                 
                 for info in information2:
-                    data2+=","+('_'.join(profiles[node].get(info, {'name':"not_found"})['name'].encode('ascii', 'ignore').replace(',', '').split()))
+                    data2+=","+('_'.join(profiles[node].get(info, {'name':"NA"})['name'].replace(',', '').split()))
                  
                 info = 'birthday'
-                test =profiles[node].get(info, "0/0/not_found").split('/')
+                test =profiles[node].get(info, "0/0/NA").split('/')
                 if len(test)==3:
                     data2+=","+test[2]
                 else:
-                    data2+=","+'not_found'   
+                    data2+=","+'NA'   
                     
                 # college and ULB
                 res = profiles[node].get('education', [])
@@ -233,11 +357,11 @@ class SocialGraph:
                     for edu in res:
                         if 'school' in edu:
                             #'Coll\xe8ge Saint - Michel'
-                            if edu["school"]["name"].encode('utf8')=='Collège Saint - Michel':
+                            if edu["school"]["name"]=='Collège Saint - Michel':
                                 data2+=","+"yes"
                                 found=True
                                 break
-                            if edu["school"]["name"].encode('utf8')=='Collège St-Michel':
+                            if edu["school"]["name"]=='Collège St-Michel':
                                 data2+=","+"yes"
                                 found=True
                                 break
@@ -247,19 +371,19 @@ class SocialGraph:
                     for edu in res:
                         if 'school' in edu:
                             #'Coll\xe8ge Saint - Michel'
-                            if edu["school"]["name"].encode('utf8')=='Université libre de Bruxelles':
+                            if edu["school"]["name"]=='Université libre de Bruxelles':
                                 data2+=","+"yes"
                                 found=True
                                 break
-                            """if edu["school"]["name"].encode('utf8')=='ULB BE':
+                            """if edu["school"]["name"]=='ULB BE':
                                 data2+=","+"yes"
                                 found=True
                                 break"""
-                            if edu["school"]["name"].encode('utf8')=='Vrije Universiteit Brussel':
+                            if edu["school"]["name"]=='Vrije Universiteit Brussel':
                                 data2+=","+"yes"
                                 found=True
                                 break
-                            if 'ULB' in edu["school"]["name"].encode('utf8'):
+                            if 'ULB' in edu["school"]["name"]:
                                 data2+=","+"yes"
                                 found=True
                                 break   
@@ -267,13 +391,13 @@ class SocialGraph:
                         data2+=","+"no"
             else:
                 for info in information:
-                    data2+=","+"not_found"
+                    data2+=","+"NA"
                 
                 for info in information2:
-                    data2+=","+"not_found"
+                    data2+=","+"NA"
                     
                 #birthday
-                data2+=","+"not_found"
+                data2+=","+"NA"
                 
                 # college and 
                 data2+=","+"no"
@@ -286,27 +410,21 @@ class SocialGraph:
                     data2+=not_keyword
                 data2+='liked'
                 
-            if userList=="":
-                data2+=','+str(partition[node])+'\n'
-            else:
-                #
-                if node in userList[1]:
-                    data2+=","+userList[0]["name"].encode('ascii', 'ignore').replace(" ", "_").replace(",", "")+'\n'
-                else:
-                    data2+=","+"other"+'\n'
-            
+                
+            data2+=self.G.node[node].get('gender', 'unknown')
+            data2+='\n'
             
             data+=data2
-            print(node_number , " processed in " ,time.time() - start_time, "seconds")
+            print("node ", node_number + 1, " processed in " ,time.time() - start_time, "seconds")
             node_number+=1
         return attributes, data
         
-    def getProfileTuples(self):
+    def getProfileTuples(self, file_path="C:\\Users\\Heschoon\\Dropbox\\ULB\\Current trends of artificial intelligence\\Trends_project\\profiles.json"):
         #information = ['relationship_status', 'locale', 'hometown', 'education', 'languages', 'location', 'birthday']
         information = ['relationship_status', 'locale']
         tuples=[]
         
-        json_data=open("C:\\Users\\Heschoon\\Dropbox\\ULB\\Current trends of artificial intelligence\\Trends_project\\profiles.json")
+        json_data=open(file_path)
         profiles = json.load(json_data)
         json_data.close()
         
@@ -314,24 +432,24 @@ class SocialGraph:
         for info in information:
             value_set=set()
             for person in profiles:
-                value_set.add(('_'.join(profiles[person].get(info, "not_found").split())))
+                value_set.add(('_'.join(profiles[person].get(info, "NA").split())))
             tuples.append((info, [x for x in value_set]))
             
         information2 = ['hometown', 'location']
         for info in information2:
             value_set=set()
             for person in profiles:
-                value_set.add(('_'.join(profiles[person].get(info, {'name':"not_found"})['name'].encode('ascii', 'ignore').replace(',', '').split())))
+                value_set.add(('_'.join(profiles[person].get(info, {'name':"NA"})['name'].replace(',', '').split())))
             tuples.append((info, [x for x in value_set]))
         
         info='birthday'
         value_set=set()
         for person in profiles:
-            test= profiles[person].get(info, "0/0/not_found").split('/')
+            test= profiles[person].get(info, "NA")
             if len(test)==3:
                 value_set.add(test[2])
             else:
-                value_set.add('not_found')
+                value_set.add('NA')
         tuples.append((info, [x for x in value_set]))
         
         tuples.append(("College_Saint-Michel", ["yes", "no"]))
@@ -362,9 +480,10 @@ class SocialGraph:
         data = self.get_attributes_with_likes(userList)
 
         f = self.getFile(filename, userList)
-        f.write('@RELATION COMMUNITY\n')
+        f.write('@RELATION GENDER\n')
         attributes=data[0]
         for attribute in attributes:
+            print(attribute[0])
             f.write('@ATTRIBUTE '+attribute[0]+" {")
             f.write(','.join(attribute[1]))
             f.write('}\n')
@@ -372,11 +491,39 @@ class SocialGraph:
         f.write(data[1])
         f.close()
     
+    def make_gender_model(self, filename):
+        f = open(filename + ".arff", 'w')
+        f.write('@RELATION GENDER\n')
+        
+        attributes=self.get_gender_attributes()
+        i=0
+        for attribute in attributes:
+            f.write('@ATTRIBUTE ')
+            try:
+                f.write(attribute[0])
+            except UnicodeEncodeError:
+                for char in attribute[0]:
+                    try:
+                        f.write(char)
+                    except UnicodeEncodeError:
+                        f.write(str(i))
+            f.write(" {")
+            f.write(','.join(attribute[1]))
+            f.write('}\n')
+            i+=1
+        f.write('@DATA\n')
+        f.write(self.get_gender_data())
+        f.close()
+        
+    def make_csv_file(self):
+        import pandas as pd
+        
+    
     def getFile(self, filename, userList):
         if userList == "":
             return open(filename + '.arff', 'w')
         else:
-            return open(filename + userList[0]["name"].encode('ascii', 'ignore').replace(" ", "_").replace(",", "")+ '.arff', 'w')
+            return open(filename + userList[0]["name"].replace(" ", "_").replace(",", "")+ '.arff', 'w')
     
     def read_friendlists_file(self, filename):
         json_data=open(filename)
