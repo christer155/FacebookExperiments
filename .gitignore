@@ -44,3 +44,4 @@ Temporary Items
 *.json
 ressources/accessToken.txt
 *.arff
+*.pyc
