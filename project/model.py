@@ -79,7 +79,7 @@ class Model:
                                 print("classifier: " + self.Classify(vector) + " given " + vector[len(vector) - 1])
                 print("The classifier is "+str(results[0]/results[1])+" percent accurate.")    
         
-        def test_max_lik(self):
+        def max_likehood_features_for_labels(self):
             for label in self.features[self.featureNameList[-1]]:
                 max_lik=[]
                 for feature in self.featureNameList[:-1]:
@@ -91,7 +91,7 @@ class Model:
                 
                 max_lik=[element for element in max_lik if not(element[2].startswith('not_'))]
                 
-                self.print_list(max_lik, 10)
+                self.print_list(max_lik, 15)
                 
         def likelihood(self, label, feature, value):
             # likelihood of feature given the class
@@ -102,7 +102,7 @@ class Model:
             for i in range(min(number, len(feature_list))):
                 print(str(i+1).rjust(4), "{0:.2f}".format(feature_list[i][0]).rjust(15)),#str(feature_list[i][0])
                 # Note trailing comma on previous line
-                print(feature_list[i][1].center(50), feature_list[i][2].ljust(0))
+                print(feature_list[i][1].replace("_", " ").center(50), feature_list[i][2].replace("_", " ").ljust(0))
 
                 
         def compute_max_likelihood_value(self, feature, label):

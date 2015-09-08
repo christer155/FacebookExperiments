@@ -38,7 +38,7 @@ graph.make_gender_model("../ressources/outputs/gender_model")
 
 
 """
-Now it's time to predict the gender from the model
+Now it's time to produce the most representative likes:
 """
 
 from model import Model
@@ -48,14 +48,5 @@ model.GetValues()
 model.TrainClassifier()
 model.name_community(score='posterior')
 
+model.max_likehood_features_for_labels()
 
-"""import networkx as nx
-from networkx.readwrite import json_graph
-
-
-my_network = json.load(open(repertory + "my_network.json"))
-friendlists = json.load(open(repertory + "friendlists.json"))
-likes = json.load(open(repertory + "likes.json"))
-
-
-test = json_graph.node_link_graph(my_network)"""
