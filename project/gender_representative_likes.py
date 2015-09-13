@@ -28,13 +28,25 @@ graph.read_json_file(repertory + "my_network.json")
 graph.read_friendlists_file(repertory + "friendlists.json")
 graph.read_likes_file(repertory + "likes.json")
 
-"""import networkx as nx
-from networkx.readwrite import json_graph
 
 
-my_network = json.load(open(repertory + "my_network.json"))
-friendlists = json.load(open(repertory + "friendlists.json"))
-likes = json.load(open(repertory + "likes.json"))
+"""
+I now must create a model file where the attribute to predict is the gender.
+"""
+graph.make_gender_model("../ressources/outputs/gender_model")
 
 
-test = json_graph.node_link_graph(my_network)"""
+
+"""
+Now it's time to produce the most representative likes:
+"""
+
+from model import Model
+
+model = Model("../ressources/outputs/gender_model.arff")
+model.GetValues()
+model.TrainClassifier()
+model.name_community(score='posterior')
+
+model.max_likehood_features_for_labels()
+
